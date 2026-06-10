@@ -187,7 +187,7 @@ def compute_tt_coupling_from_data(df_raw, beta, freq_hz, phi=0.0):
     j_eff_z = sin_beta**2 * tt_phase
 
     parallel_integral = np.sum(volume_weights * ex_phi * j_eff_x)
-    cross_integral = np.sum(volume_weights * (ey_phi * j_eff_y + ez * j_eff_z))
+    cross_integral = np.sum(volume_weights * (ey_phi * j_eff_y - ez * j_eff_z))
 
     denominator = cavity_volume * normalization_integral
     coupling_parallel = np.abs(parallel_integral) ** 2 / denominator
