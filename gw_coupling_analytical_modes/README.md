@@ -11,13 +11,16 @@ The code supports automatic mode normalization, parallel evaluation, and export 
 ```text
 .
 ├── geometry/
+│   ├── base.py
+│   ├── cylindrical.py
+│   ├── spherical.py
+│   ├── rectangular.py
+│   └── integration.py
+├── modes/
+│   ├── base.py
 │   ├── cylindrical.py
 │   ├── spherical.py
 │   └── rectangular.py
-├── modes/
-│   ├── cylindrical_modes.py
-│   ├── spherical_modes.py
-│   └── rectangular_modes.py
 ├── coupling/
 │   ├── coupling.py
 │   └── utils.py
@@ -211,5 +214,3 @@ a
 b
 c
 ```
-
-The coupling map can be used to construct sky sensitivity distributions and compare mode-dependent detector response.
