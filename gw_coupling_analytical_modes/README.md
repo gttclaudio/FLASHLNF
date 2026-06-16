@@ -10,8 +10,6 @@ The code supports automatic mode normalization, parallel evaluation, and export 
 
 ```text
 .
-├── src/
-│   └── gw_cavity_coupling.py
 ├── geometry/
 │   ├── cylindrical.py
 │   ├── spherical.py
@@ -23,6 +21,7 @@ The code supports automatic mode normalization, parallel evaluation, and export 
 ├── coupling/
 │   ├── coupling.py
 │   └── utils.py
+├── coupling_calculator.py  
 ├── results/                  # created locally; ignored by Git
 ├── requirements.txt
 └── README.md
