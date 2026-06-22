@@ -1,53 +1,85 @@
 import numpy as np
 from tqdm import tqdm
-from coupling.utils import h_monochromatic, compute_k_pol, make_jeff
+from coupling.utils import compute_k_pol
+from coupling.sources import gw_coupling, axion_coupling, dp_coupling, scalar_coupling
 from multiprocessing import Pool
 
-def compute_coupling(args):
-    cavity, mode, B, pol, omega, k, e1, e2, t = args
-    def hplus(tau):  return h_monochromatic(amplitude=1.0, tau=tau, omega=omega)
-    def hcross(tau): return h_monochromatic(amplitude=1.0, tau=tau, omega=omega, phase=np.pi/2)
-
-    jeff = make_jeff(B=B, cavity=cavity, hplus=hplus, hcross=hcross, k=k, e1=e1, e2=e2)[pol]
-    V = cavity.volume()
-    def E1(Y): return mode.E(Y)
-    def E2(Y): return jeff(Y, t)
-
-    coupling = cavity.overlap_integral(E1, E2, method="nquad", epsabs=1e-8, epsrel=1e-6, limit=80, complex_value=True) / np.sqrt(V)
-
-    return coupling
-
+SOURCE_REGISTRY = {
+    "gw": gw_coupling,
+    "axion": axion_coupling,
+    "dp": dp_coupling,
+    "scalar": scalar_coupling,
+}
 
 class CouplingStrength:
-    def __init__(self, cavity, mode, theta_vals, phi_vals: int = 0, B=(0.0, 0.0, 1.0), pol: str = "cross", nproc: int = 1):
+    def __init__(self, cavity, mode, source, beta_vals, phi_vals, B=(0.0, 0.0, 1.0), pol: str = "cross", nproc: int = 1):
         self.cavity = cavity
         self.mode = mode
+
+        self.source = source
+        self.kernel = SOURCE_REGISTRY[source]
+
         self.B = np.asarray(B, dtype=float)
         self.pol = str(pol)
         self.nproc = int(nproc)
-        self.theta_vals = theta_vals
+
+        self.beta_vals = beta_vals
         self.phi_vals = phi_vals
 
         self.omega = mode.omega()
-        
-    def run(self, t=0.0, k=None):
+
+    def requires_direction_scan(self):
+
+        return self.source in {"gw", "dp"}
+
+    def _run_directional(self):
+
         directions = []
+
         for phi in self.phi_vals:
-            for theta in self.theta_vals:
-                k, e1, e2 = compute_k_pol(theta, phi)
+            for beta in self.beta_vals:
+
+                k, e1, e2 = compute_k_pol(beta, phi)
+
                 directions.append((k, e1, e2))
-        
-        eta_k = []
-        mode_numbers = ''.join(map(str, self.mode.indices))
-        desc = f"[INFO] Computing coupling for mode {self.mode.mode_name}_{mode_numbers} with {self.pol} polarization"
 
-        args = [(self.cavity, self.mode, self.B, self.pol, self.omega, k, e1, e2, t)
-            for (k, e1, e2) in directions]
+        args = []
 
-        with Pool(processes=self.nproc) as pool:
-            it = pool.imap(compute_coupling, args)
-            eta_k = list(tqdm(it, total=len(args), desc=desc, unit="k"))
+        if self.source == "gw":
 
-        eta_k = np.array(eta_k)
-        eta_reshaped = eta_k.reshape(len(self.phi_vals), len(self.theta_vals))
-        return eta_reshaped
+            args = [
+                (self.cavity, self.mode, self.B, self.pol, self.omega, k, e1, e2)
+                for k, e1, e2 in directions
+            ]
+
+        elif self.source == "dp":
+
+            args = [
+                (self.cavity, self.mode, k)
+                for k, _, _ in directions
+            ]
+
+        with Pool(self.nproc) as pool:
+
+            C = list(tqdm(pool.imap(self.kernel, args), total=len(args)))
+
+        return np.array(C).reshape(len(self.phi_vals), len(self.beta_vals))
+
+    def _run_single(self):
+
+        if self.source == "axion":
+
+            args = (self.cavity, self.mode,self.B)
+
+        elif self.source == "scalar":
+
+            args = (self.cavity, self.mode, self.B,)
+
+        return self.kernel(args)
+    
+    def run(self):
+    
+        if self.requires_direction_scan():
+            return self._run_directional()
+
+        return self._run_single()

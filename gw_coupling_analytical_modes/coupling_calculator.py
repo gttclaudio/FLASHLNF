@@ -1,7 +1,6 @@
-import argparse
+import argparse, os
 import numpy as np
 import pandas as pd
-import os
 
 from geometry import CylindricalCavity, SphericalCavity, RectangularCavity
 from modes import CylindricalMode, SphericalMode, RectangularMode
@@ -11,11 +10,14 @@ from coupling.utils import mean_calc
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Compute cavity-GW coupling strength η(β,φ) for various geometries and modes.")
+    parser = argparse.ArgumentParser(description="Compute cavity coupling strength C(β, φ) to various source terms, geometries and modes.")
     
     # Geometry selection
     parser.add_argument("--geometry", choices=["rectangular", "cylindrical", "spherical"], default="cylindrical", help="Cavity geometry type")
     
+    # Source term selection
+    parser.add_argument("--source", choices=["gw", "axion", "scalar", "dp"], default="gw", help="Source term type")
+
     # Mode selection
     parser.add_argument("--mode", default="TM010", help="Mode name in format TM010.")
     
@@ -37,6 +39,37 @@ def parse_args():
     parser.add_argument("--output-dir", type=str, default="results")
     
     return parser.parse_args()
+
+def make_filename(args, freq_mhz):
+    if args.source == "gw":
+        return f"TT_gauge_{args.mode}_{freq_mhz:.4f}MHz.pkl"
+    if args.source == "dp":
+        return f"DP_{args.mode}_{freq_mhz:.4f}MHz.pkl"
+    if args.source == "axion":
+        return f"axion_{args.mode}_{freq_mhz:.4f}MHz.pkl"
+    if args.source == "scalar":
+        return f"scalar_{args.mode}_{freq_mhz:.4f}MHz.pkl"
+    
+def compute_mode_sum(cavity, mode_class, mode_names, mode_ind, source, beta_vals=None, phi_vals=None, pol=None, nproc=1):
+    results = []
+
+    for mode_name in mode_names:
+
+        mode = mode_class(indices=mode_ind, mode_name=mode_name, cavity=cavity)
+
+        mode.normalize()
+
+        solver = CouplingStrength(cavity=cavity, mode=mode, source=source, 
+                                  beta_vals=beta_vals, phi_vals=phi_vals, 
+                                  pol=pol, nproc=nproc)
+
+        results.append(solver.run())
+
+    C_total = results[0]
+    for r in results[1:]:
+        C_total = C_total + r
+
+    return C_total
 
 
 def main():
@@ -66,52 +99,95 @@ def main():
     freq_mhz = mode.omega() / (2 * np.pi * 1e6)
     print(f"[INFO] Mode {args.mode} frequency f = {freq_mhz:.4f} MHz.")
 
-
     beta_vals = np.linspace(0.0, np.pi, args.n_beta)
-    phi_vals = np.linspace(0.0, 2.0 * np.pi, args.n_phi) if args.n_phi > 0 else np.zeros(1)
+    phi_vals = np.linspace(0.0, 2.0 * np.pi, args.n_phi) 
 
-    C = {"plus": None, "cross": None}
+    if args.source == "gw":
 
-    for pol in ["plus", "cross"]:
-        result = []
-        for mode_name in mode_name_arr:
-            mode = mode_class(indices=mode_ind, mode_name=mode_name, cavity=cavity)
-            mode.normalize()
+        C = {"plus": None, "cross": None}
 
-            res = CouplingStrength(cavity=cavity, mode=mode, theta_vals=beta_vals, phi_vals=phi_vals, pol=pol, nproc=args.n_processes)
-            result.append(res.run())
+        for pol in ["plus", "cross"]:
+            C[pol] = compute_mode_sum(cavity=cavity, mode_class=mode_class, mode_names=mode_name_arr, mode_ind=mode_ind, source=args.source, 
+                                      beta_vals=beta_vals, phi_vals=phi_vals, pol=pol, nproc=args.n_processes)
 
-        eta_a = result[0]
-        eta_b = result[1] if len(result) > 1 else 0.0
+            mean_C = mean_calc(C[pol], beta_vals)
+            max_C = np.max(C[pol])
 
-        C[pol] = np.abs(eta_a)**2 + np.abs(eta_b)**2
+            print(f"[INFO] Results for coupling strength in the {pol} polarisation:")
+            print(f"⟨C(β, φ)⟩ = {mean_C:.4f}, Cₘₐₓ = {max_C:.4f}")
+
+        # Build dataframe
+        records = []
+
+        for i_phi, phi in enumerate(phi_vals):
+            for i_beta, beta in enumerate(beta_vals):
+
+                records.append({
+                    "beta": beta,
+                    "phi": phi,
+                    "coupling_parallel": C["plus"][i_phi, i_beta],
+                    "coupling_cross": C["cross"][i_phi, i_beta],
+                })
+
+    elif args.source == "dp":
+
+        C = compute_mode_sum(cavity=cavity, mode_class=mode_class, mode_names=mode_name_arr, mode_ind=mode_ind, source=args.source, 
+                             beta_vals=beta_vals, phi_vals=phi_vals, pol=None, nproc=args.n_processes)
+        
+        mean_C = mean_calc(C, beta_vals)
+        max_C = np.max(C)
+
+        print(f"[INFO] Results for coupling strength to dark photon:")
+        print(f"⟨C(β, φ)⟩ = {mean_C:.4f}, Cₘₐₓ = {max_C:.4f}")
+
+                # Build dataframe
+        records = []
+
+        for i_phi, phi in enumerate(phi_vals):
+            for i_beta, beta in enumerate(beta_vals):
+
+                records.append({
+                    "beta": beta,
+                    "phi": phi,
+                    "coupling": C[i_phi, i_beta],
+                })
     
-        mean_C = mean_calc(C[pol], beta_vals)
-        max_C = np.max(C[pol])
+    elif args.source == "axion":
 
-        print(f"[INFO] Results for coupling strength in the {pol} polarisation:")
-        print(f"⟨C(β, φ)⟩= {mean_C:.4f}, Cₘₐₓ = {max_C:.4f}")
+        C = compute_mode_sum(cavity=cavity, mode_class=mode_class, mode_names=mode_name_arr, mode_ind=mode_ind, source=args.source, 
+                             beta_vals=None, phi_vals=None, pol=None, nproc=args.n_processes)
 
-    # Build dataframe
-    records = []
+        print(f"[INFO] Results for coupling strength to axion:")
+        print(f"C = {C:.4f}")
 
-    for i_phi, phi in enumerate(phi_vals):
-        for i_beta, beta in enumerate(beta_vals):
+        records = []
+        records.append({"coupling": C})
 
-            records.append({
-                "beta": beta,
-                "phi": phi,
-                "coupling_parallel": C["plus"][i_phi, i_beta],
-                "coupling_cross": C["cross"][i_phi, i_beta],
-            })
+
+    elif args.source == "scalar":
+
+        C = compute_mode_sum(cavity=cavity, mode_class=mode_class, mode_names=mode_name_arr, mode_ind=mode_ind, source=args.source, 
+                             beta_vals=None, phi_vals=None, pol=None, nproc=args.n_processes)
+
+        print(f"[INFO] Results for coupling strength to scalar:")
+        print(f"C = {C:.4f}")
+
+        records = []
+        records.append({"coupling": C})
+
+    filename = make_filename(args, freq_mhz)
 
     df = pd.DataFrame(records)
 
     df.attrs = {
         "geometry": args.geometry, "mode": args.mode,
         "frequency_mhz": freq_mhz,
-        "n_beta": args.n_beta, "n_phi": args.n_phi,
     }
+
+    if args.source in ["gw", "dp"]:
+        df.attrs.update({
+            "n_beta": args.n_beta, "n_phi": args.n_phi,
+        })
 
     if args.geometry == "rectangular":
         df.attrs.update({
@@ -122,22 +198,15 @@ def main():
         df.attrs.update({
             "R": args.R, "L": args.L,
         })
-    
+        
     if args.geometry == "spherical":
         df.attrs.update({
             "R": args.R,
         })
 
-    filename = (
-        f"TT_gauge_{args.mode}_{freq_mhz:.4f}MHz_analytical.pkl"
-    )
-
     save_dir = os.path.join(args.output_dir, args.geometry)
-
     os.makedirs(save_dir, exist_ok=True)
-
     filepath = os.path.join(save_dir, filename)
-
     df.to_pickle(filepath)
 
     print(f"[INFO] Results saved to {filepath}")
