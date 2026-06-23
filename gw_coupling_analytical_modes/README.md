@@ -23,6 +23,7 @@ The code supports automatic mode normalization, parallel evaluation, and export 
 │   └── rectangular.py
 ├── coupling/
 │   ├── coupling.py
+│   ├── sources.py
 │   └── utils.py
 ├── coupling_calculator.py  
 ├── results/                  # created locally; ignored by Git
