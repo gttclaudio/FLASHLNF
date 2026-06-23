@@ -27,9 +27,9 @@ def parse_args():
     parser.add_argument("--L", type=float, default=0.05,  help="Cylindrical cavity height [m]")
 
     # Rectangular cavity, it is assumed the magnetic field is in the z-direction
-    parser.add_argument("--a", type=float, default=None, help="Rectangular cavity x-dimension length [m]")
-    parser.add_argument("--b", type=float, default=None, help="Rectangular cavity y-dimension length [m]")
-    parser.add_argument("--c", type=float, default=None, help="Rectangular cavity z-dimension length [m]")
+    parser.add_argument("--a", type=float, default=0.1, help="Rectangular cavity x-dimension length [m]")
+    parser.add_argument("--b", type=float, default=0.1, help="Rectangular cavity y-dimension length [m]")
+    parser.add_argument("--c", type=float, default=0.1, help="Rectangular cavity z-dimension length [m]")
     
     # Simulation parameters
     parser.add_argument("--n-beta", type=int, default=11, help="Number of beta angles to sample")
@@ -97,6 +97,7 @@ def main():
 
     mode_name = mode_name_arr[0]
     mode = mode_class(indices=mode_ind, mode_name=mode_name, cavity=cavity)
+    print(mode)
     freq_mhz = mode.omega() / (2 * np.pi * 1e6)
     print(f"[INFO] Mode {args.mode} frequency f = {freq_mhz:.4f} MHz.")
 
@@ -174,7 +175,7 @@ def main():
         max_C = np.max(C)
 
         print(f"[INFO] Results for coupling strength to scalar:")
-        print(f"⟨C(β, φ)⟩ = {mean_C:.4f}, Cₘₐₓ = {max_C:.4f}")
+        print(f"⟨C(β, φ)⟩ = {mean_C:.7f}, Cₘₐₓ = {max_C:.7f}")
 
                 # Build dataframe
         records = []

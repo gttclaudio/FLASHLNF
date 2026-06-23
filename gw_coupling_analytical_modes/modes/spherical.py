@@ -15,6 +15,7 @@ class SphericalMode(CavityMode):
         self.m, self.n, self.p = indices
         super().__init__(indices, mode_name, cavity)
         self.root = self._find_root()
+        self.k = self.k_calc()
         
     # ---------------- mode index validation ----------------
     def _is_zero_mode(self):
@@ -51,18 +52,18 @@ class SphericalMode(CavityMode):
         return find_zero(self.n, self.p, func)
 
     # ---------------- wavevector ----------------
-    def k(self):
+    def k_calc(self):
         return self.root / self.cavity.R
 
     def omega(self):
-        return c_cnst * self.k()
+        return c_cnst * self.k
 
     # ---------------- prenormalized E field ----------------
     def E_prenorm(self, Y):   
         if self._is_zero_mode():
             return np.zeros(3, dtype=complex)
         
-        k = self.k()
+        k = self.k
         m, n, p = self.m, self.n, self.p
         R = self.cavity.R
         root_np = self.root
@@ -100,20 +101,77 @@ class SphericalMode(CavityMode):
             raise ValueError(f"Invalid mode {self.mode_name} {self.mode_ind}")
 
         return np.array([Er, Etheta, Ephi])
+    
+    def B_prenorm(self, Y):   
+        if self._is_zero_mode():
+            return np.zeros(3, dtype=complex)
         
-    # ---------------- normalized E field ----------------
+        k = self.k
+        m, n, p = self.m, self.n, self.p
+        R = self.cavity.R
+        root_np = self.root
+        
+        Y[0] = max(Y[0], 1e-12)
+        Y[1] = max(Y[1], 1e-12)
+        
+        sin_theta_safe = np.sin(Y[1])
+        
+        if self.mode_name == 'TEa':
+
+            Br = - n * (n+1) / (k * Y[0]**2) * jn_hat(n, root_np * Y[0] / R) * lpmv(m, n, np.cos(Y[1])) * np.cos(m * Y[2])
+            Btheta = - 1 / (Y[0]) * jn_hat_der(n, root_np * Y[0] / R) * dPnm_dtheta(n, m, Y[1]) * np.cos(m * Y[2])
+            Bphi = m / (Y[0] * sin_theta_safe) * jn_hat(n, root_np * Y[0] / R) * lpmv(n, m, np.cos(Y[1])) * np.sin(m * Y[2])
+
+        elif self.mode_name == 'TEb':
+
+            Br = - n * (n+1) / (k * Y[0]**2) * jn_hat(n, root_np * Y[0] / R) * lpmv(m, n, np.cos(Y[1])) * np.sin(m * Y[2])
+            Btheta = - 1 / (Y[0]) * jn_hat_der(n, root_np * Y[0] / R) * dPnm_dtheta(n, m, Y[1]) * np.sin(m * Y[2])
+            Bphi = - m / (Y[0] * sin_theta_safe) * jn_hat(n, root_np * Y[0] / R) * lpmv(n, m, np.cos(Y[1])) * np.cos(m * Y[2])
+            
+        elif self.mode_name == 'TMa':
+
+            Br = 0.0
+            Btheta = - m / (k * Y[0] * sin_theta_safe) * jn_hat(n, root_np * Y[0] / R) * lpmv(m, n, np.cos(Y[1])) * np.sin(m * Y[2])
+            Bphi = -1 / (k * Y[0]) * jn_hat(n, root_np * Y[0] / R) * dPnm_dtheta(m, n, Y[1]) * np.cos(m * Y[2])
+
+        elif self.mode_name == 'TMb':
+
+            Br = 0.0
+            Btheta = m / (k * Y[0] * sin_theta_safe) * jn_hat(n, root_np * Y[0] / R) * lpmv(m, n, np.cos(Y[1])) * np.cos(m * Y[2])
+            Bphi = -1 / (k * Y[0]) * jn_hat(n, root_np * Y[0] / R) * dPnm_dtheta(m, n, Y[1]) * np.sin(m * Y[2])
+            
+        else:
+            raise ValueError(f"Invalid mode {self.mode_name} {self.mode_ind}")
+
+        return np.array([Br, Btheta, Bphi])
+        
+    # ---------------- normalized fields ----------------
     def E(self, Y):
         if self.norm is None:
             raise RuntimeError("Mode not normalized")
-        return self.E_prenorm(Y) / np.sqrt(self.norm)
+        return self.E_prenorm(Y)/np.sqrt(self.norm_E)
         
+    def B(self, Y):
+        if self.norm_B is None:
+            raise RuntimeError("Mode not normalized")
+        
+        return self.B_prenorm(Y)/np.sqrt(self.norm_B)
+    
     # ---------------- normalization ----------------
     def normalize(self):
         if self._is_zero_mode():
-            self.norm = 1
-        else:
+            self.norm_E = 1
+            self.norm_B = 1
+        else:    
             def E1(Y): return self.E_prenorm(Y)
-            self.norm = self.cavity.overlap_integral(E1, E1)
+            self.norm_E = self.cavity.overlap_integral(E1, E1)
+            def E2(Y): return self.B_prenorm(Y)
+            self.norm_B = self.cavity.overlap_integral(E2, E2)
+
+            if self.norm_E == 0:
+                self.norm_E = 1
+            if self.norm_B == 0:
+                self.norm_B = 1
 
 # ---------------- helper functions ----------------
 def jn_hat(n, x):

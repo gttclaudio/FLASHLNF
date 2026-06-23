@@ -31,13 +31,13 @@ class CavityMode(ABC):
         pass
 
     @abstractmethod
-    def k(self):
+    def k_calc(self):
         """Return magnitude of wavevector."""
         pass
 
     def omega(self):
         """Angular frequency."""
-        return c_cnst * self.k()
+        return c_cnst * self.k
 
     @abstractmethod
     def E_prenorm(self, Y):

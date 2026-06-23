@@ -56,7 +56,7 @@ def scalar_coupling(args):
   
     V = cavity.volume()
     def E1(Y): return mode.B(Y)
-    def E2(Y): return cavity.cart_vec_to_native(B_field, Y) * np.exp(1j * (np.dot(k, cavity.native_to_cart(Y)))) # And possibly a phase term 
+    def E2(Y): return cavity.cart_vec_to_native(B_field, Y) * np.exp(1j * (np.dot(k, cavity.native_to_cart(Y)))) 
 
     coupling = np.abs(cavity.overlap_integral(E1, E2,
                                               method="nquad", epsabs=1e-8, epsrel=1e-6, 

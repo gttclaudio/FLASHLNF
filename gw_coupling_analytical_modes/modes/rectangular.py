@@ -11,6 +11,7 @@ class RectangularMode(CavityMode):
     def __init__(self, indices, mode_name, cavity):
         self.m, self.n, self.p = indices
         super().__init__(indices, mode_name, cavity)
+        self.k = self.k_calc()
         
     # ---------------- mode index validation ----------------
     def _is_zero_mode(self):
@@ -35,12 +36,13 @@ class RectangularMode(CavityMode):
             
 
     # ---------------- wavevector ----------------
-    def k(self):
+    def k_calc(self):
         a, b, c = self.cavity.a, self.cavity.b, self.cavity.c
+
         return np.sqrt((self.m*np.pi/a)**2 + (self.n*np.pi/b)**2 + (self.p*np.pi/c)**2)
 
     def omega(self):
-        return c_cnst * self.k()
+        return c_cnst * self.k
 
     # ---------------- prenormalized E field ----------------
     def E_prenorm(self, Y):
@@ -48,7 +50,7 @@ class RectangularMode(CavityMode):
         if self._is_zero_mode():
             return np.zeros(3, dtype=complex)
         
-        k = self.k()
+        k = self.k
         a, b, c = self.cavity.a, self.cavity.b, self.cavity.c
         m, n, p = self.m, self.n, self.p
         
@@ -65,17 +67,56 @@ class RectangularMode(CavityMode):
             Ez = np.sin(m * np.pi / a * Y[0]) * np.sin(n * np.pi / b * Y[1]) * np.cos(p * np.pi / c * Y[2])
 
         return np.array([Ex, Ey, Ez])
+    
+    def B_prenorm(self, Y):
 
-    # ---------------- normalized E field ----------------
+        if self._is_zero_mode():
+            return np.zeros(3, dtype=complex)
+        
+        k = self.k
+        a, b, c = self.cavity.a, self.cavity.b, self.cavity.c
+        m, n, p = self.m, self.n, self.p
+        
+        if self.mode_name == 'TE':
+
+            Bx = - 1 / (k**2 - (p * np.pi / c)**2 ) * (m * np.pi / a) * (n * np.pi / b) * np.sin(m * np.pi / a * Y[0]) * np.cos(n * np.pi / b * Y[1]) * np.cos(p * np.pi / c * Y[2])
+            By = 1 / (k**2 - (p * np.pi / c)**2 ) * (m * np.pi / a) * (p * np.pi / c) * np.cos(m * np.pi / a * Y[0]) * np.sin(n * np.pi / b * Y[1]) * np.sin(p * np.pi / c * Y[2])
+            Bz =  np.cos(m * np.pi / a * Y[0]) * np.cos(n * np.pi / b * Y[1]) * np.sin(p * np.pi / c * Y[2])
+
+        elif self.mode_name == 'TM':
+
+            Bx = - 1j / (k**2 - (p * np.pi / c)**2 ) * (n * np.pi / b) * np.sin(m * np.pi / a * Y[0]) * np.cos(n * np.pi / b * Y[1]) * np.cos(p * np.pi / c * Y[2])
+            By = 1j / (k**2 - (p * np.pi / c)**2 )  * (m * np.pi / a) * np.cos(m * np.pi / a * Y[0]) * np.sin(n * np.pi / b * Y[1]) * np.cos(p * np.pi / c * Y[2])
+            Bz = 0.0
+
+        return np.array([Bx, By, Bz])
+
+    # ---------------- normalized fields ----------------
     def E(self, Y):
         if self.norm is None:
             raise RuntimeError("Mode not normalized")
-        return self.E_prenorm(Y)/np.sqrt(self.norm)
-
-    # ---------------- normalization ----------------
+        return self.E_prenorm(Y)/np.sqrt(self.norm_E)
+        
+    def B(self, Y):
+        if self.norm_B is None:
+            raise RuntimeError("Mode not normalized")
+        
+        return self.B_prenorm(Y)/np.sqrt(self.norm_B)
+    
+# ---------------- normalization ----------------
     def normalize(self):
         if self._is_zero_mode():
-            self.norm = 1
-        else:
+            self.norm_E = 1
+            self.norm_B = 1
+        else:    
             def E1(Y): return self.E_prenorm(Y)
-            self.norm = self.cavity.overlap_integral(E1, E1)
+            self.norm_E = self.cavity.overlap_integral(E1, E1)
+            def E2(Y): return self.B_prenorm(Y)
+            self.norm_B = self.cavity.overlap_integral(E2, E2)
+
+            if self.norm_E == 0:
+                self.norm_E = 1
+            if self.norm_B == 0:
+                self.norm_B = 1
+
+    

@@ -13,6 +13,7 @@ class CylindricalMode(CavityMode):
         self.n, self.p, self.q = indices
         super().__init__(indices, mode_name, cavity)
         self.root = self._find_root()
+        self.k = self.k_calc()
         
     # ---------------- mode index validation ----------------
     def _is_zero_mode(self):
@@ -59,7 +60,7 @@ class CylindricalMode(CavityMode):
         return np.sqrt((self.q * np.pi/L)**2 + (self.root/R)**2)
         
     def omega(self):
-        return c_cnst * self.k()
+        return c_cnst * self.k
         
     # ---------------- prenormalized E field ----------------
     def E_prenorm(self, Y):
@@ -67,7 +68,7 @@ class CylindricalMode(CavityMode):
         if self._is_zero_mode():
             return np.zeros(3, dtype=complex)
             
-        k = self.k()
+        k = self.k
         n, p, q = self.n, self.p, self.q
         L, R = self.cavity.L, self.cavity.R
         root_np = self.root
@@ -107,7 +108,7 @@ class CylindricalMode(CavityMode):
         if self._is_zero_mode():
             return np.zeros(3, dtype=complex)
             
-        k = self.k()
+        k = self.k
         n, p, q = self.n, self.p, self.q
         L, R = self.cavity.L, self.cavity.R
         root_np = self.root
@@ -141,7 +142,7 @@ class CylindricalMode(CavityMode):
 
         return np.array([Br, Bphi, Bz])
         
-    # ---------------- normalized E field ----------------
+    # ---------------- normalized fields ----------------
     def E(self, Y):
         if self.norm_E is None:
             raise RuntimeError("Mode not normalized")
@@ -164,7 +165,6 @@ class CylindricalMode(CavityMode):
             self.norm_E = self.cavity.overlap_integral(E1, E1)
             def E2(Y): return self.B_prenorm(Y)
             self.norm_B = self.cavity.overlap_integral(E2, E2)
-            # self.norm_B = self.norm_E / c_cnst**2
 
             if self.norm_E == 0:
                 self.norm_E = 1
