@@ -17,6 +17,7 @@ def parse_args():
     
     # Source term selection
     parser.add_argument("--source", choices=["gw", "axion", "scalar", "dp"], default="gw", help="Source term type")
+    parser.add_argument("--wavenumber", type=float, default=1, help="Particle wavenumber in units of [m^-1]")
 
     # Mode selection
     parser.add_argument("--mode", default="TM010", help="Mode name in format TM010.")
@@ -50,7 +51,7 @@ def make_filename(args, freq_mhz):
     if args.source == "scalar":
         return f"scalar_{args.mode}_{freq_mhz:.4f}MHz.pkl"
     
-def compute_mode_sum(cavity, mode_class, mode_names, mode_ind, source, beta_vals=None, phi_vals=None, pol=None, nproc=1):
+def compute_mode_sum(cavity, mode_class, mode_names, mode_ind, source, k_scale=1.0, beta_vals=None, phi_vals=None, pol=None, nproc=1):
     results = []
 
     for mode_name in mode_names:
@@ -60,7 +61,7 @@ def compute_mode_sum(cavity, mode_class, mode_names, mode_ind, source, beta_vals
         mode.normalize()
 
         solver = CouplingStrength(cavity=cavity, mode=mode, source=source, 
-                                  beta_vals=beta_vals, phi_vals=phi_vals, 
+                                  beta_vals=beta_vals, phi_vals=phi_vals, k_scale=k_scale,
                                   pol=pol, nproc=nproc)
 
         results.append(solver.run())
@@ -167,13 +168,25 @@ def main():
     elif args.source == "scalar":
 
         C = compute_mode_sum(cavity=cavity, mode_class=mode_class, mode_names=mode_name_arr, mode_ind=mode_ind, source=args.source, 
-                             beta_vals=None, phi_vals=None, pol=None, nproc=args.n_processes)
+                             beta_vals=beta_vals, phi_vals=phi_vals, k_scale=args.wavenumber, pol=None, nproc=args.n_processes)
+        
+        mean_C = mean_calc(C, beta_vals)
+        max_C = np.max(C)
 
         print(f"[INFO] Results for coupling strength to scalar:")
-        print(f"C = {C:.4f}")
+        print(f"⟨C(β, φ)⟩ = {mean_C:.4f}, Cₘₐₓ = {max_C:.4f}")
 
+                # Build dataframe
         records = []
-        records.append({"coupling": C})
+
+        for i_phi, phi in enumerate(phi_vals):
+            for i_beta, beta in enumerate(beta_vals):
+
+                records.append({
+                    "beta": beta,
+                    "phi": phi,
+                    "coupling": C[i_phi, i_beta],
+                })
 
     filename = make_filename(args, freq_mhz)
 

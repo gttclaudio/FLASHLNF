@@ -100,18 +100,73 @@ class CylindricalMode(CavityMode):
             Ez   =  jv(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.cos(n * Y[1])
             
         return np.array([Er, Ephi, Ez])
+    
+    # ---------------- prenormalized B field ----------------
+    def B_prenorm(self, Y):
+
+        if self._is_zero_mode():
+            return np.zeros(3, dtype=complex)
+            
+        k = self.k()
+        n, p, q = self.n, self.p, self.q
+        L, R = self.cavity.L, self.cavity.R
+        root_np = self.root
+
+        Y = np.array(Y, copy=True)  # defensive copy
+        Y[0] = max(Y[0], 1e-30)  # avoid division by zero at rho=0
+        
+        if self.mode_name == 'TEa':
+                
+            Br   = 1 / (k**2 - (q * np.pi / L)**2 ) * (q * np.pi / L) * (root_np / R) * jvp(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.sin(n * Y[1])
+            Bphi = 1 / (k**2 - (q * np.pi / L)**2 ) * (q * np.pi / L) * (n / Y[0]) * jv(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.cos(n * Y[1])
+            Bz   = jv(n, root_np * Y[0] / R) * np.sin(q * np.pi / L * Y[2]) * np.sin(n * Y[1])
+            
+        elif self.mode_name == 'TEb':
+                
+            Br   = 1 / (k**2 - (q * np.pi / L)**2 ) * (q * np.pi / L) * (root_np / R) * jvp(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.cos(n * Y[1])
+            Bphi = - 1 / (k**2 - (q * np.pi / L)**2 ) * (q * np.pi / L) * (n / Y[0]) * jv(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.sin(n * Y[1])
+            Bz   = jv(n, root_np * Y[0] / R) * np.sin(q * np.pi / L * Y[2]) * np.cos(n * Y[1])
+            
+        elif self.mode_name == 'TMa':
+                
+            Br   = - 1 / (k**2 - (q * np.pi / L)**2 ) * (n / Y[0]) * jv(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.cos(n * Y[1])
+            Bphi =  1 / (k**2 - (q * np.pi / L)**2 ) * (root_np / R) * jvp(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.sin(n * Y[1])
+            Bz   =  0.0
+            
+        elif self.mode_name == 'TMb':
+                
+            Br   = 1 / (k**2 - (q * np.pi / L)**2 ) * (n / Y[0]) * jv(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.sin(n * Y[1])
+            Bphi = 1 / (k**2 - (q * np.pi / L)**2 ) * (root_np / R) * jvp(n, root_np * Y[0] / R) * np.cos(q * np.pi / L * Y[2]) * np.cos(n * Y[1])
+            Bz   =  0.0
+
+        return np.array([Br, Bphi, Bz])
         
     # ---------------- normalized E field ----------------
     def E(self, Y):
-        if self.norm is None:
+        if self.norm_E is None:
             raise RuntimeError("Mode not normalized")
             
-        return self.E_prenorm(Y)/np.sqrt(self.norm)
+        return self.E_prenorm(Y)/np.sqrt(self.norm_E)
+    
+    def B(self, Y):
+        if self.norm_B is None:
+            raise RuntimeError("Mode not normalized")
         
+        return self.B_prenorm(Y)/np.sqrt(self.norm_B)
+                    
     # ---------------- normalization ----------------
     def normalize(self):
         if self._is_zero_mode():
-            self.norm = 1
+            self.norm_E = 1
+            self.norm_B = 1
         else:    
             def E1(Y): return self.E_prenorm(Y)
-            self.norm = self.cavity.overlap_integral(E1, E1)
+            self.norm_E = self.cavity.overlap_integral(E1, E1)
+            def E2(Y): return self.B_prenorm(Y)
+            self.norm_B = self.cavity.overlap_integral(E2, E2)
+            # self.norm_B = self.norm_E / c_cnst**2
+
+            if self.norm_E == 0:
+                self.norm_E = 1
+            if self.norm_B == 0:
+                self.norm_B = 1

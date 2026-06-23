@@ -12,7 +12,7 @@ SOURCE_REGISTRY = {
 }
 
 class CouplingStrength:
-    def __init__(self, cavity, mode, source, beta_vals, phi_vals, B=(0.0, 0.0, 1.0), pol: str = "cross", nproc: int = 1):
+    def __init__(self, cavity, mode, source, beta_vals, phi_vals, k_scale=1, B=(0.0, 0.0, 1.0), pol: str = "cross", nproc: int = 1):
         self.cavity = cavity
         self.mode = mode
 
@@ -20,6 +20,7 @@ class CouplingStrength:
         self.kernel = SOURCE_REGISTRY[source]
 
         self.B = np.asarray(B, dtype=float)
+        self.k_scale = k_scale
         self.pol = str(pol)
         self.nproc = int(nproc)
 
@@ -30,7 +31,7 @@ class CouplingStrength:
 
     def requires_direction_scan(self):
 
-        return self.source in {"gw", "dp"}
+        return self.source in {"gw", "dp", "scalar"}
 
     def _run_directional(self):
 
@@ -59,6 +60,14 @@ class CouplingStrength:
                 for k, _, _ in directions
             ]
 
+        elif self.source == "scalar":
+
+            args = [
+                (self.cavity, self.mode, self.B, k, self.k_scale)
+                for k, _, _ in directions
+            ]
+
+
         with Pool(self.nproc) as pool:
 
             C = list(tqdm(pool.imap(self.kernel, args), total=len(args)))
@@ -68,12 +77,7 @@ class CouplingStrength:
     def _run_single(self):
 
         if self.source == "axion":
-
-            args = (self.cavity, self.mode,self.B)
-
-        elif self.source == "scalar":
-
-            args = (self.cavity, self.mode, self.B,)
+            args = (self.cavity, self.mode, self.B)
 
         return self.kernel(args)
     

@@ -46,11 +46,25 @@ class CavityMode(ABC):
 
     def E(self, Y):
         """Normalized E field."""
-        if self.norm is None:
+        if self.norm_E is None:
             raise RuntimeError("Mode not normalized")
-        return self.E_prenorm(Y) / np.sqrt(self.norm)
+        return self.E_prenorm(Y) / np.sqrt(self.norm_E)
+    
+    @abstractmethod
+    def B_prenorm(self, Y):
+        """Prenormalized E field at point Y."""
+        pass
+
+    def B(self, Y):
+        """Normalized E field."""
+        if self.norm_B is None:
+            raise RuntimeError("Mode not normalized")
+        return self.B_prenorm(Y) / np.sqrt(self.norm_B)
 
     def normalize(self):
         """Compute normalization factor from cavity overlap integral."""
         def E1(Y): return self.E_prenorm(Y)
-        self.norm = self.cavity.overlap_integral(E1, E1)
+        self.norm_E = self.cavity.overlap_integral(E1, E1)
+
+        def E2(Y): return self.B_prenorm(Y)
+        self.norm_B = self.cavity.overlap_integral(E2, E2)
