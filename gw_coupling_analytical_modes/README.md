@@ -1,8 +1,8 @@
-# Gravitational-wave cavity coupling calculator from analytical modes
+# Cavity coupling calculator from analytical modes
 
-This repository contains Python code for computing transverse-traceless (TT) gravitational-wave coupling for ideal cylindrical, spherical, and rectangular cavities, using analytical expressions for cavity modes.
+This repository contains Python code for computing transverse-traceless (TT) gravitational-wave, axion, scalar and dark photon coupling for ideal cylindrical, spherical, and rectangular cavities, using analytical expressions for cavity modes.
 
-The implementation evaluates the directional coupling response of cavity eigenmodes to an incident gravitational wave by scanning over propagation angles (\beta) and (\phi), computing both GW polarization states (plus and cross).
+The implementation evaluates the directional coupling response of cavity eigenmodes to an incident gravitational wave by scanning over propagation angles $\beta$ and $\phi$, computing both GW polarization states (plus (parallel) and cross), or the coupling averaged over $\beta$ and $\phi$ for isotropically distributed scalar momenta or dark photon directions.
 
 The code supports automatic mode normalization, parallel evaluation, and export of coupling maps in a standard format.
 
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 
 ### Cylindrical cavity
 
-Compute coupling for the TM010 mode:
+Compute GW coupling for the TM010 mode:
 
 ```bash
 python coupling_calculator.py \
@@ -62,6 +62,7 @@ python coupling_calculator.py \
     --mode TM010 \
     --R 0.05 \
     --L 0.05 \
+    --source "gw" \
     --n-beta 151 \
     --n-phi 51 \
     --n-processes 8 \
@@ -75,6 +76,7 @@ python coupling_calculator.py \
     --geometry spherical \
     --mode TM010 \
     --R 0.05 \
+    --source "gw" \
     --n-beta 151 \
     --n-phi 51 \
     --n-processes 8
@@ -89,6 +91,7 @@ python coupling_calculator.py \
     --a 0.10 \
     --b 0.05 \
     --c 0.08 \
+    --source "gw" \
     --n-beta 151 \
     --n-phi 51 \
     --n-processes 8
@@ -107,6 +110,21 @@ Supported values:
 * `cylindrical`
 * `spherical`
 * `rectangular`
+
+### Source selection
+
+```text
+--source
+```
+
+Supported values:
+
+* `gw`
+* `dp`
+* `axion`
+* `scalar`
+
+**Axion** couplings only compute a single value. **GW** coupling averages over propagation direction. **DP** coupling (dark photon) averages over dark photon direction. **Scalar** coupling allows for an extra parameter --wavenumber, which takes in the wavenumber of the scalar in $\mathrm{m}^{-1}$, allowing for DM or non-DM scalar coupling calculations.
 
 ### Mode selection
 
