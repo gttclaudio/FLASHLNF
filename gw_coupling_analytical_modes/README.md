@@ -214,3 +214,13 @@ a
 b
 c
 ```
+
+For spherical cavities:
+```text
+R
+```
+
+For cylindrical cavities:
+```text
+L
+```
