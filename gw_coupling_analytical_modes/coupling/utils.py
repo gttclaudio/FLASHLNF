@@ -19,18 +19,18 @@ def mean_calc(eta, theta):
 
 def compute_k_pol(theta, phi):
 
-    k = np.array([np.sin(theta)*np.cos(phi), 
-                  np.sin(theta)*np.sin(phi), 
+    k = np.array([-np.sin(theta)*np.sin(phi), 
+                   np.sin(theta)*np.cos(phi), 
                   np.cos(theta)
                  ])
 
-    e1 = np.array([-np.sin(phi), 
-                   np.cos(phi), 
+    e1 = np.array([np.cos(phi), 
+                   np.sin(phi), 
                    0.0
                  ])
 
-    e2 = np.array([np.cos(theta)*np.cos(phi), 
-                   np.cos(theta)*np.sin(phi), 
+    e2 = np.array([-np.cos(theta)*np.sin(phi), 
+                   np.cos(theta)*np.cos(phi), 
                    -np.sin(theta)
                  ])
 
