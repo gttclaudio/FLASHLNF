@@ -25,7 +25,7 @@ $$
 where 
 
 $$
-\hat{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x}) = \frac{\vec{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x})}{\omega_0 h_{+, \times}} = e^{i (\vec{k}(\beta, \phi) \cdot \vec{x})/c} \vec{B}_{+, \times},
+\hat{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x}) = \frac{\vec{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x})}{\omega_0 h_{+, \times}} = e^{-i \vec{k}(\beta, \phi) \cdot \vec{x}} \vec{B}_{+, \times},
 $$
 
 for $\vec{k}(\beta, \phi)$ describing the wave vector describing a gravitational wave propagating in the $\beta, \phi$ direction, and $\vec{B}_{+, \times}$ defined as
