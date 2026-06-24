@@ -25,10 +25,10 @@ $$
 where 
 
 $$
-\hat{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x}) = \frac{\vec{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x})}{\omega_0 h_{+, \times}} = e^{-i \vec{k}(\beta, \phi) \cdot \vec{x}} \vec{B}_{+, \times},
+\hat{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x}; \beta, \phi) = \frac{\vec{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x}; \beta, \phi)}{\omega_0 h_{+, \times}} = e^{-i \vec{k}(\beta, \phi) \cdot \vec{x}} \vec{B}_{+, \times}(\beta, \phi),
 $$
 
-for $\vec{k}(\beta, \phi)$ describing the wave vector describing a gravitational wave propagating in the $\beta, \phi$ direction, and $\vec{B}_{+, \times}$ defined as
+for $\vec{k}(\beta, \phi)$ describing the wave vector describing a gravitational wave propagating in the $\beta, \phi$ direction, and $\vec{B}_{+, \times}(\beta, \phi)$ defined as
 
 $$
 \mathbf{B}_{+} = (\hat{B}_{\perp} \cdot \hat{e}_2) \mathbf{e}_1 + (\vec{B}_{\perp} \cdot \hat{e}_1) \hat{e}_2,
@@ -39,10 +39,10 @@ $$
 $$
 
 $$
-B_{\parallel} = (\vec{B}_0 \cdot \hat{k}) \hat{k}, \quad B_{\perp} = \mathbf{B}_0 - (\mathbf{B}_0 \cdot \mathbf{k}) \mathbf{k}.
+B_{\parallel} = (\vec{B} \cdot \hat{k}) \hat{k}, \quad B_{\perp} = \mathbf{B} - (\mathbf{B} \cdot \hat{k}) \hat{k}.
 $$
 
-Where $\hat{k}$ is the unit vector of the direction of gravitational wave propagation in terms of $\beta, \phi$, and $\hat{e}_1$ and $\hat{e}_2$ are perpendicular unit vectors, which define the plus and cross polarisations.
+Where $\hat{k}(\beta, \phi)$ is the unit vector of the direction of gravitational wave propagation, and $\hat{e}_1(\beta, \phi)$ and $\hat{e}_2(\beta, \phi)$ are perpendicular unit vectors, which define the plus and cross polarisations.
 
 ### Dark photons
 
