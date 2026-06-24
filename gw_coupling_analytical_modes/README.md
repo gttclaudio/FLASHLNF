@@ -6,6 +6,62 @@ The implementation evaluates the directional coupling response of cavity eigenmo
 
 The code supports automatic mode normalization, parallel evaluation, and export of coupling maps in a standard format.
 
+## Definitions of coupling coefficients
+In the following expressions we define $\vec{E}_n(\vec{x})$ and $\vec{B}_n(\vec{x})$ the electric and magnetic field, respectively, for the cavity mode $n$. The cavity is taken to have a volume $V$ and have a homogeneous magnetic field in the $z$-direction $\vec{B} = B_0 \hat{z}$. $\beta$ and $\phi$ are taken to represent the polar angles **towards which** a particular vector is pointing.
+
+### Axions
+$$
+    C_\mathrm{axion}= \frac{1}{B_0^2 V} \frac{ \left| \int \enspace \vec{E}_n(\vec{x}) \cdot \vec{B} \enspace  dV\right|^2}{\int |\vec{E}_n(\vec{x})| ^2 \enspace dV},
+$$
+
+where for the axion case $\beta$ and $\phi$ are not parameters, and only a single value of $C_\mathrm{axion}$ is computed.
+
+### Gravitational waves in TT gauge
+
+$$
+    C_\mathrm{gw}^{+, \times} (\beta, \phi) = \frac{1}{B_0^2 V} \frac{ \left| \int \enspace \vec{E}_n(\vec{x}) \cdot \hat{j}^{\mathrm{+, \times}}_\mathrm{eff} (\vec{x}; \beta, \phi) \enspace dV \right|^2}{ \int |\vec{E}_n(\vec{x})|^2 \enspace dV},
+$$
+
+where 
+
+$$
+\hat{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x}) = \frac{\vec{j}^\mathrm{+,\times}_\mathrm{eff} (\vec{x})}{\omega_0 h_{+, \times}} = e^{i (\vec{k}(\beta, \phi) \cdot \vec{x})/c} \vec{B}_{+, \times},
+$$
+
+for $\vec{k}(\beta, \phi)$ describing the wave vector describing a gravitational wave propagating in the $\beta, \phi$ direction, and $\vec{B}_{+, \times}$ defined as
+
+$$
+\mathbf{B}_{+} = (\hat{B}_{\perp} \cdot \hat{e}_2) \mathbf{e}_1 + (\vec{B}_{\perp} \cdot \hat{e}_1) \hat{e}_2,
+$$
+
+$$
+\mathbf{B}_{\times} = -(\vec{B}_{\perp} \cdot \hat{e}_1) \hat{e}_1 + (\vec{B}_{\perp} \cdot \hat{e}_2) \hat{e}_2,
+$$
+
+$$
+B_{\parallel} = (\vec{B}_0 \cdot \hat{k}) \hat{k}, \quad B_{\perp} = \mathbf{B}_0 - (\mathbf{B}_0 \cdot \mathbf{k}) \mathbf{k}.
+$$
+
+Where $\hat{k}$ is the unit vector of the direction of gravitational wave propagation in terms of $\beta, \phi$, and $\hat{e}_1$ and $\hat{e}_2$ are perpendicular unit vectors, which define the plus and cross polarisations.
+
+### Dark photons
+
+$$
+    C_\mathrm{dp} (\beta, \phi) = \frac{1}{V} \frac{ \left| \int \enspace \vec{E}_n(\vec{x}) \cdot \hat{e}_A(\beta, \phi) \enspace  dV\right| ^2}{\int |\vec{E}_n(\vec{x})|^2 \enspace dV},
+$$
+
+where $\hat{e}_A(\beta, \phi)$ is the unit vector describing the polarisation direction of the vector field $A$, parametrised by polar angles $\beta$ and $\phi$. The script also computes the average over angles $\beta, \phi$ for an isotropic dark photon field.
+
+
+### Scalars
+
+$$
+    C_\mathrm{scalar} (\beta, \phi) = \frac{1}{B_0^2 V} \frac{ \left| \int \enspace \vec{B}_n(\vec{x}) \cdot \vec{B} \enspace e^{i \vec{k} (\beta, \phi)\cdot \vec{x}} \enspace  dV\right|^2}{\int |\vec{B}_n(\vec{x})|^2 \enspace dV},
+$$
+
+where $\vec{k} (\beta, \phi)$ is the wave vector of the scalar particle. Then $\beta, \phi$ are averaged over for an isotropic momentum distribution. The phase term is important to include for scalars, because even for scalars constituting dark matter, the constant contribution from $e^{i \vec{k} (\beta, \phi) \cdot \vec{x}} \approx  1 + \vec{k} (\beta, \phi) \cdot \vec{x}$ leads to a 0 coupling.
+
+
 ## Repository structure
 
 ```text
