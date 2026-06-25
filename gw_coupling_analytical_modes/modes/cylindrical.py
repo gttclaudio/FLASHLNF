@@ -55,7 +55,7 @@ class CylindricalMode(CavityMode):
             return jnp_zeros(self.n, self.p)[self.p-1]
             
     # ---------------- wavevector ----------------
-    def k(self):
+    def k_calc(self):
         L, R = self.cavity.L, self.cavity.R
         return np.sqrt((self.q * np.pi/L)**2 + (self.root/R)**2)
         
