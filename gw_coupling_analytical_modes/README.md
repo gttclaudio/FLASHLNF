@@ -7,7 +7,7 @@ The implementation evaluates the directional coupling response of cavity eigenmo
 The code supports automatic mode normalization, parallel evaluation, and export of coupling maps in a standard format.
 
 ## Definitions of coupling coefficients
-In the following expressions we define $\vec{E}_n(\vec{x})$ and $\vec{B}_n(\vec{x})$ the electric and magnetic field, respectively, for the cavity mode $n$. The cavity is taken to have a volume $V$ and have a homogeneous magnetic field in the $z$-direction $\vec{B} = B_0 \hat{z}$. $\beta$ and $\phi$ are taken to represent the polar angles **towards which** a particular vector is pointing.
+In the following expressions we define $\vec{E}_n(\vec{x})$ and $\vec{B}_n(\vec{x})$ the electric and magnetic field, respectively, for the cavity mode $n$. The cavity is taken to have a volume $V$ and have a homogeneous magnetic field in the $z$-direction $\vec{B} = B_0 \hat{z}$. Angles $\beta$ and $\phi$ are taken to represent the polar angles **towards which** a particular vector is pointing.
 
 ### Axions
 $$
