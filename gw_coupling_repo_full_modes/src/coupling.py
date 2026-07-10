@@ -1,10 +1,10 @@
 """
-Compute transverse-traceless (TT) gravitational-wave coupling from cavity-field CSV data.
+Compute couplings to gravitational waves in TT-gauge, axions and dark photons from cavity-field CSV data.
 
 This module reads electromagnetic field maps exported from COMSOL, assigns finite-volume
-weights to sampled grid points, and evaluates two TT-coupling terms over a scan of
-incident angles. Each input mode file is saved as a pickle file containing a DataFrame
-with the scan angles and coupling values.
+weights to sampled grid points, and evaluates couplings to GWs and dark photons over a scan of
+incident angles, and a single coupling to axions. Each input mode file is saved as a pickle file 
+containing a DataFrame with the scan angles and coupling values.
 
 Main modules
 ------------
@@ -235,9 +235,7 @@ def scalar_integrand(beta, phi, coords, Bs, wave_number):
 
 
 def mean_calc(coupling, beta):
-
     weights = np.sin(beta)
-
 
     return np.sum(coupling * weights) / np.sum(weights)
 
@@ -279,7 +277,7 @@ def parse_mode_and_frequency(csv_path):
 
 
 def run_scan_for_csv(csv_path, coupling_type, z_min_mm=0.0, z_max_mm=1500.0, n_angles=201, n_processes=6, output_dir=None):
-    """Run the TT-coupling scan for one CSV file."""
+    """Run the coupling scan for one CSV file."""
     csv_path = Path(csv_path)
     output_dir = Path(output_dir) if output_dir is not None else csv_path.parent
 
@@ -408,7 +406,7 @@ def resolve_mode_csv(mode, data_dir="data"):
 
 def run_scan(csv_files=None, folder=None, filename_filter="", **kwargs):
     """
-    Run the TT-coupling scan for explicit CSV files or for matching files in a folder.
+    Run the scan for explicit CSV files or for matching files in a folder.
 
     Use csv_files for clear examples and production jobs with known inputs.
     Use folder plus filename_filter for batch processing many modes in one directory.
