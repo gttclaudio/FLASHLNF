@@ -148,3 +148,31 @@ Each output file contains a pandas DataFrame with these columns:
 ```text
 beta, phi, coupling_parallel, coupling_cross
 ```
+
+### Output from $\texttt{coupling.py}$
+
+For an axion:
+
+```text
+results/axion_TE011_218.3000MHz.pkl
+results/axion_TM010_129.0000MHz.pkl
+```
+
+Where the output file contains:
+
+```text
+coupling
+```
+
+For a dark photon:
+
+```text
+results/DP_TE011_218.3000MHz.pkl
+results/DP_TM010_129.0000MHz.pkl
+```
+
+Where the output file contains:
+
+```text
+beta, phi, coupling
+```
