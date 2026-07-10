@@ -1,6 +1,6 @@
 # TT gravitational-wave coupling calculator
 
-This repository contains Python code for computing transverse-traceless (TT) gravitational-wave coupling from COMSOL cavity-field CSV data.
+This repository contains Python code for computing transverse-traceless (TT) gravitational-wave coupling from COMSOL cavity-field CSV data. In addition, it can compute couplings to axion and dark photon particles from the same data.
 
 Two full mode files are included in `data/`:
 
@@ -12,6 +12,8 @@ Two full mode files are included in `data/`:
 ```text
 .
 ├── src/
+│   ├── GW_coupling_TT_E_D_fields.py
+│   ├── coupling.py
 │   └── gw_coupling_tt.py
 ├── data/
 │   ├── FLASH_LF_TE011_218.3MHz.csv
@@ -59,6 +61,26 @@ python src/gw_coupling_tt.py --mode TE011 --n-angles 5 --n-processes 1 --output-
 ```
 
 `--n-angles 201` means a `201 x 201` scan over beta and phi. This is the production-style setting. `--n-angles 5` is only a quick sanity check.
+
+### Other couplings
+
+Run coupling calculation for axions to the TM010 mode:
+
+```bash
+python src/coupling.py --mode TM010 --source axion --ouput-dir results
+```
+
+Run coupling calculation for dark photons to the TM010 mode:
+
+```bash
+python src/coupling.py --mode TM010 --source dp --ouput-dir results
+```
+
+The TT-gauge calculation is also possible in the same script:
+
+```bash
+python src/coupling.py --mode TM010 --source gw --ouput-dir results
+```
 
 ## What `--mode` means
 
