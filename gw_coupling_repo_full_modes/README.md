@@ -145,11 +145,21 @@ results/TT_gauge_TE011_218.3000MHz.pkl
 results/TT_gauge_TM010_129.0000MHz.pkl
 ```
 
-Each output file contains a pandas DataFrame with these columns:
+Each output file is a dictionary with two keys, `"results"` and `"summary"`:
 
-```text
-beta, phi, coupling_parallel, coupling_cross
-```
+- `"results"` is a pandas DataFrame with columns:
+
+  ```text
+  beta, phi, coupling_parallel, coupling_cross
+  ```
+
+- `"summary"` is a dictionary of scan-level statistics:
+
+  ```text
+  mean_p, max_p, mean_c, max_c, mean, max
+  ```
+
+  where `mean_p`/`max_p` and `mean_c`/`max_c` are the mean and max of the parallel and cross couplings respectively, and `mean`/`max` are the mean and max of the combined (parallel + cross) coupling.
 
 ### Output from `coupling.py`
 
@@ -160,11 +170,21 @@ results/axion_TE011_218.3000MHz.pkl
 results/axion_TM010_129.0000MHz.pkl
 ```
 
-Where the output file contains:
+Each output file is a dictionary with two keys, `"results"` and `"summary"`:
 
-```text
-coupling
-```
+- `"results"` is a pandas DataFrame with a single column:
+
+  ```text
+  coupling
+  ```
+
+- `"summary"` is a dictionary:
+
+  ```text
+  mean, max
+  ```
+
+  Since the axion coupling is a single value rather than a scan, `mean` and `max` are both equal to that value.
 
 For a dark photon:
 
@@ -173,8 +193,30 @@ results/DP_TE011_218.3000MHz.pkl
 results/DP_TM010_129.0000MHz.pkl
 ```
 
-Where the output file contains:
+Each output file is a dictionary with two keys, `"results"` and `"summary"`:
 
-```text
-beta, phi, coupling
+- `"results"` is a pandas DataFrame with columns:
+
+  ```text
+  beta, phi, coupling
+  ```
+
+- `"summary"` is a dictionary:
+
+  ```text
+  mean, max
+  ```
+
+  the mean and max coupling over the beta/phi scan.
+
+### Loading the output
+
+```python
+import pickle
+
+with open("results/TT_gauge_TM010_129.0000MHz.pkl", "rb") as f:
+    data = pickle.load(f)
+
+df = data["results"]        # pandas DataFrame with the full scan
+summary = data["summary"]   # dict of mean/max coupling values
 ```

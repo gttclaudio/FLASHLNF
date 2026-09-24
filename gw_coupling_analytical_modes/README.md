@@ -252,7 +252,16 @@ results/
     └── TT_gauge_TE101_218.3000MHz.pkl
 ```
 
-Each output file contains a pickled pandas DataFrame.
+Filenames are prefixed by source: `TT_gauge_` for `gw`, `DP_` for `dp`, `axion_` for `axion`, and `scalar_` for `scalar`.
+
+Each output file is a pickled dictionary with two keys, `"results"` and `"summary"`:
+
+- `"results"` is a pandas DataFrame holding the full scan (or, for axions, a single-row table).
+- `"summary"` is a dictionary of scan-level mean/max coupling values.
+
+The DataFrame columns and summary keys depend on `--source`:
+
+**`gw`**
 
 Columns:
 
@@ -263,14 +272,45 @@ coupling_parallel
 coupling_cross
 ```
 
-Example:
+Summary:
 
-| beta | phi  | coupling_parallel | coupling_cross |
-| ---- | ---- | ----------------- | -------------- |
-| 0.00 | 0.00 | 0.031             | 0.017          |
-| 0.31 | 0.00 | 0.042             | 0.024          |
+```text
+mean_p, max_p    # mean/max of coupling_parallel
+mean_c, max_c    # mean/max of coupling_cross
+mean, max        # mean/max of the combined (parallel + cross) coupling
+```
 
-Additional metadata are stored in `DataFrame.attrs`.
+**`dp`** and **`scalar`**
+
+Columns:
+
+```text
+beta
+phi
+coupling
+```
+
+Summary:
+
+```text
+mean, max        # mean/max of coupling over the beta/phi scan
+```
+
+**`axion`**
+
+Columns:
+
+```text
+coupling          # single row
+```
+
+Summary:
+
+```text
+mean, max         # both equal to the single computed value
+```
+
+Additional metadata are stored in `DataFrame.attrs` (i.e. `data["results"].attrs`).
 
 Common metadata:
 
@@ -278,9 +318,9 @@ Common metadata:
 geometry
 mode
 frequency_mhz
-n_beta
-n_phi
 ```
+
+`n_beta` and `n_phi` are also stored, but only for `gw` and `dp` sources.
 
 For rectangular cavities:
 
@@ -299,4 +339,17 @@ For cylindrical cavities:
 ```text
 R
 L
+```
+
+### Loading the output
+
+```python
+import pickle
+
+with open("results/cylindrical/TT_gauge_TM010_129.0000MHz.pkl", "rb") as f:
+    data = pickle.load(f)
+
+df = data["results"]           # pandas DataFrame with the full scan
+summary = data["summary"]      # dict of mean/max coupling values
+metadata = df.attrs            # geometry, mode, frequency_mhz, ...
 ```
