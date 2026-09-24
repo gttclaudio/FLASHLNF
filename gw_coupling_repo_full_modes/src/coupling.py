@@ -316,6 +316,14 @@ def run_scan_for_csv(csv_path, coupling_type, z_min_mm=0.0, z_max_mm=1500.0, n_a
             "coupling": [result]
         })
 
+        pickle_data = {
+                "results": df_results,
+                "summary": {
+                    "mean": result,
+                    "max": result
+                }
+            }
+
         print(f"Axion coupling computed to be {result:.5f}")
     
     else:
@@ -361,10 +369,26 @@ def run_scan_for_csv(csv_path, coupling_type, z_min_mm=0.0, z_max_mm=1500.0, n_a
             df_results = pd.DataFrame(records)
 
             mean_coupling_p = mean_calc(df_results["coupling_parallel"].to_numpy(), df_results["beta"].to_numpy())
+            max_coupling_p = np.max(df_results["coupling_parallel"].to_numpy())
             mean_coupling_c = mean_calc(df_results["coupling_cross"].to_numpy(), df_results["beta"].to_numpy())
+            max_coupling_c = np.max(df_results["coupling_cross"].to_numpy())
+
+            pickle_data = {
+                "results": df_results,
+                "summary": {
+                    "mean_p": mean_coupling_p,
+                    "max_p": max_coupling_p,
+                    "mean_c": mean_coupling_c,
+                    "max_c": mean_coupling_c,
+                    "mean": mean_coupling_p + mean_coupling_c,
+                    "max": np.max(df_results["coupling_parallel"].to_numpy()+df_results["coupling_cross"].to_numpy()),
+                }
+            }
 
             print(f"GW TT-gauge mean parallel coupling computed to be {mean_coupling_p:.5f}")
+            print(f"GW TT-gauge max parallel coupling computed to be {max_coupling_p:.5f}")
             print(f"GW TT-gauge mean cross coupling computed to be {mean_coupling_c:.5f}")
+            print(f"GW TT-gauge max cross coupling computed to be {max_coupling_c:.5f}")
 
         if coupling_type == "dp":
 
@@ -376,13 +400,26 @@ def run_scan_for_csv(csv_path, coupling_type, z_min_mm=0.0, z_max_mm=1500.0, n_a
             df_results = pd.DataFrame(records)
 
             mean_coupling = mean_calc(df_results["coupling"].to_numpy(), df_results["beta"].to_numpy())
+            max_coupling = np.max(df_results["coupling"].to_numpy())
+
+            pickle_data = {
+                "results": df_results,
+                "summary": {
+                    "mean": mean_coupling,
+                    "max": max_coupling,
+                }
+            }
 
             print(f"Dark photon coupling for isotropic signal computed to be {mean_coupling:.5f}")
+            print(f"Maximum dark photon coupling for a polarised signal computed to be {max_coupling:.5f}")
         
 
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{label}_{mode}_{freq_hz / 1e6:.4f}MHz.pkl"
-    df_results.to_pickle(output_path)
+    
+    with open(output_path, "wb") as f:
+        pickle.dump(pickle_data, f)
+        
     print(f"Saved: {output_path}")
     return output_path
 
