@@ -151,7 +151,7 @@ Each output file contains a pandas DataFrame with these columns:
 beta, phi, coupling_parallel, coupling_cross
 ```
 
-### Output from `coupling.py`$
+### Output from `coupling.py`
 
 For an axion:
 
