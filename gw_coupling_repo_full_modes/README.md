@@ -1,6 +1,6 @@
 # TT gravitational-wave coupling calculator
 
-This repository contains Python code for computing transverse-traceless (TT) gravitational-wave coupling from COMSOL cavity-field CSV data. In addition, it can compute couplings to axion and dark photon particles from the same data.
+This repository contains Python code for computing transverse-traceless (TT) gravitational-wave coupling from COMSOL cavity-field CSV data (where it is assumed the magnetic field points in the z-direction). In addition, it can compute couplings to axion and dark photon particles from the same data.
 
 Two full mode files are included in `data/`:
 
@@ -23,6 +23,8 @@ Two full mode files are included in `data/`:
 ├── .gitignore
 └── README.md
 ```
+
+`GW_coupling_TT_E_D_fields.py` and `gw_coupling_tt.py` are old versions, where the same functionality is now implemented in `coupling.py`
 
 ## Installation
 
