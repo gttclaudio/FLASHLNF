@@ -380,7 +380,7 @@ def run_scan_for_csv(csv_path, coupling_type, z_min_mm=0.0, z_max_mm=1500.0, n_a
                     "mean_p": mean_coupling_p,
                     "max_p": max_coupling_p,
                     "mean_c": mean_coupling_c,
-                    "max_c": mean_coupling_c,
+                    "max_c": max_coupling_c,
                     "mean": mean_coupling_p + mean_coupling_c,
                     "max": np.max(df_results["coupling_parallel"].to_numpy()+df_results["coupling_cross"].to_numpy()),
                 }

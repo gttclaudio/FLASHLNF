@@ -1,4 +1,4 @@
-import argparse, os
+import argparse, os, pickle
 import numpy as np
 import pandas as pd
 
@@ -107,16 +107,18 @@ def main():
     if args.source == "gw":
 
         C = {"plus": None, "cross": None}
+        means = {}
+        maxs = {}
 
         for pol in ["plus", "cross"]:
             C[pol] = compute_mode_sum(cavity=cavity, mode_class=mode_class, mode_names=mode_name_arr, mode_ind=mode_ind, source=args.source, 
                                       beta_vals=beta_vals, phi_vals=phi_vals, pol=pol, nproc=args.n_processes)
 
-            mean_C = mean_calc(C[pol], beta_vals)
-            max_C = np.max(C[pol])
+            means[pol] = mean_calc(C[pol], beta_vals)
+            maxs[pol] = np.max(C[pol])
 
             print(f"[INFO] Results for coupling strength in the {pol} polarisation:")
-            print(f"⟨C(β, φ)⟩ = {mean_C:.4f}, Cₘₐₓ = {max_C:.4f}")
+            print(f"⟨C(β, φ)⟩ = {means[pol]:.4f}, Cₘₐₓ = {maxs[pol]:.4f}")
 
         # Build dataframe
         records = []
@@ -130,6 +132,15 @@ def main():
                     "coupling_parallel": C["plus"][i_phi, i_beta],
                     "coupling_cross": C["cross"][i_phi, i_beta],
                 })
+
+        summary = {
+            "mean_p": means["plus"],
+            "max_p": maxs["plus"],
+            "mean_c": means["cross"],
+            "max_c": maxs["cross"],
+            "mean": means["plus"] + means["cross"],
+            "max": np.max(C["plus"] + C["cross"]),
+        }
 
     elif args.source == "dp":
 
@@ -153,6 +164,11 @@ def main():
                     "phi": phi,
                     "coupling": C[i_phi, i_beta],
                 })
+
+        summary = {
+            "mean": mean_C,
+            "max": max_C,
+        }
     
     elif args.source == "axion":
 
@@ -164,6 +180,11 @@ def main():
 
         records = []
         records.append({"coupling": C})
+
+        summary = {
+            "mean": C,
+            "max": C,
+        }
 
 
     elif args.source == "scalar":
@@ -188,6 +209,11 @@ def main():
                     "phi": phi,
                     "coupling": C[i_phi, i_beta],
                 })
+
+        summary = {
+            "mean": mean_C,
+            "max": max_C,
+        }
 
     filename = make_filename(args, freq_mhz)
 
@@ -218,10 +244,17 @@ def main():
             "R": args.R,
         })
 
+    pickle_data = {
+        "results": df,
+        "summary": summary,
+    }
+
     save_dir = os.path.join(args.output_dir, args.geometry)
     os.makedirs(save_dir, exist_ok=True)
     filepath = os.path.join(save_dir, filename)
-    df.to_pickle(filepath)
+
+    with open(filepath, "wb") as f:
+        pickle.dump(pickle_data, f)
 
     print(f"[INFO] Results saved to {filepath}")
 
